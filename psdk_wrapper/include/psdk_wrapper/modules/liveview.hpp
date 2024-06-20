@@ -99,6 +99,8 @@ class LiveviewModule : public rclcpp_lifecycle::LifecycleNode
  private:
   friend void c_publish_main_streaming_callback(CameraRGBImage img,
                                                 void* user_data);
+  friend void c_publish_vice_streaming_callback(CameraRGBImage img,
+                                                void* user_data);
   friend void c_publish_fpv_streaming_callback(CameraRGBImage img,
                                                void* user_data);
   friend void c_LiveviewConvertH264ToRgbCallback(
@@ -155,6 +157,13 @@ class LiveviewModule : public rclcpp_lifecycle::LifecycleNode
    */
   void publish_main_camera_images(CameraRGBImage rgb_img, void* user_data);
 
+    /**
+   * @brief Publishes the vice camera streaming to a ROS 2 topic
+   * @param rgb_img  decoded RGB frame retrieved from the camera
+   * @param user_data unused parameter
+   */
+  void publish_vice_camera_images(CameraRGBImage rgb_img, void* user_data);
+
   /**
    * @brief Publishes the raw (not decoded) main camera streaming to a ROS 2
    * topic
@@ -162,6 +171,15 @@ class LiveviewModule : public rclcpp_lifecycle::LifecycleNode
    * @param buffer_length length of the buffer
    */
   void publish_main_camera_images(const uint8_t* buffer,
+                                  uint32_t buffer_length);
+
+  /**
+   * @brief Publishes the raw (not decoded) vice camera streaming to a ROS 2
+   * topic
+   * @param buffer  raw buffer retrieved from the camera
+   * @param buffer_length length of the buffer
+   */
+  void publish_vice_camera_images(const uint8_t* buffer,
                                   uint32_t buffer_length);
 
   /**
@@ -188,6 +206,8 @@ class LiveviewModule : public rclcpp_lifecycle::LifecycleNode
       camera_setup_streaming_service_;
   rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::Image>::SharedPtr
       main_camera_stream_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::Image>::SharedPtr
+      vice_camera_stream_pub_;
   rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::Image>::SharedPtr
       fpv_camera_stream_pub_;
 

@@ -43,6 +43,8 @@ LiveviewModule::on_configure(const rclcpp_lifecycle::State &state)
   RCLCPP_INFO(get_logger(), "Configuring LiveviewModule");
   main_camera_stream_pub_ = create_publisher<sensor_msgs::msg::Image>(
       "psdk_ros2/main_camera_stream", rclcpp::SensorDataQoS());
+  vice_camera_stream_pub_ = create_publisher<sensor_msgs::msg::Image>(
+      "psdk_ros2/vice_camera_stream", rclcpp::SensorDataQoS());
   fpv_camera_stream_pub_ = create_publisher<sensor_msgs::msg::Image>(
       "psdk_ros2/fpv_camera_stream", rclcpp::SensorDataQoS());
   camera_setup_streaming_service_ = create_service<CameraSetupStreaming>(
@@ -59,6 +61,7 @@ LiveviewModule::on_activate(const rclcpp_lifecycle::State &state)
   (void)state;
   RCLCPP_INFO(get_logger(), "Activating LiveviewModule");
   main_camera_stream_pub_->on_activate();
+  vice_camera_stream_pub_->on_activate();
   fpv_camera_stream_pub_->on_activate();
   return CallbackReturn::SUCCESS;
 }
@@ -69,6 +72,7 @@ LiveviewModule::on_deactivate(const rclcpp_lifecycle::State &state)
   (void)state;
   RCLCPP_INFO(get_logger(), "Deactivating LiveviewModule");
   main_camera_stream_pub_->on_deactivate();
+  vice_camera_stream_pub_->on_deactivate();
   fpv_camera_stream_pub_->on_deactivate();
   return CallbackReturn::SUCCESS;
 }
@@ -80,6 +84,7 @@ LiveviewModule::on_cleanup(const rclcpp_lifecycle::State &state)
   RCLCPP_INFO(get_logger(), "Cleaning up LiveviewModule");
   camera_setup_streaming_service_.reset();
   main_camera_stream_pub_.reset();
+  vice_camera_stream_pub_.reset();
   fpv_camera_stream_pub_.reset();
   return CallbackReturn::SUCCESS;
 }
@@ -178,6 +183,14 @@ c_publish_main_streaming_callback(CameraRGBImage img, void *user_data)
 }
 
 void
+c_publish_vice_streaming_callback(CameraRGBImage img, void *user_data)
+{
+  std::unique_lock<std::shared_mutex> lock(
+      global_liveview_ptr_->global_ptr_mutex_);
+  return global_liveview_ptr_->publish_vice_camera_images(img, user_data);
+}
+
+void
 c_publish_fpv_streaming_callback(CameraRGBImage img, void *user_data)
 {
   std::unique_lock<std::shared_mutex> lock(
@@ -209,6 +222,13 @@ LiveviewModule::camera_setup_streaming_cb(
     {
       char main_camera_name[] = "MAIN_CAMERA";
       streaming_result = start_camera_stream(&c_publish_main_streaming_callback,
+                                             &main_camera_name, payload_index,
+                                             selected_camera_source_);
+    }
+    else if (payload_index == DJI_LIVEVIEW_CAMERA_POSITION_NO_2)
+    {
+      char main_camera_name[] = "VICE_CAMERA";
+      streaming_result = start_camera_stream(&c_publish_vice_streaming_callback,
                                              &main_camera_name, payload_index,
                                              selected_camera_source_);
     }
@@ -322,6 +342,18 @@ LiveviewModule::publish_main_camera_images(const uint8_t *buffer,
   main_camera_stream_pub_->publish(std::move(img));
 }
 
+void 
+LiveviewModule::publish_vice_camera_images(const uint8_t *buffer,
+                                           uint32_t buffer_length)
+{
+  auto img = std::make_unique<sensor_msgs::msg::Image>();
+  img->encoding = "h264";
+  img->data = std::vector<uint8_t>(buffer, buffer + buffer_length);
+  img->header.stamp = this->get_clock()->now();
+  img->header.frame_id = get_optical_frame_id(); //FIXME should this have a different name?
+  vice_camera_stream_pub_->publish(std::move(img));
+}
+
 void
 LiveviewModule::publish_fpv_camera_images(const uint8_t *buffer,
                                           uint32_t buffer_length)
@@ -349,6 +381,23 @@ LiveviewModule::publish_main_camera_images(CameraRGBImage rgb_img,
   img->header.stamp = this->get_clock()->now();
   img->header.frame_id = get_optical_frame_id();
   main_camera_stream_pub_->publish(std::move(img));
+}
+
+void
+LiveviewModule::publish_vice_camera_images(CameraRGBImage rgb_img,
+                                           void *user_data)
+{
+  (void)user_data;
+  auto img = std::make_unique<sensor_msgs::msg::Image>();
+  img->height = rgb_img.height;
+  img->width = rgb_img.width;
+  img->step = rgb_img.width * 3;
+  img->encoding = "rgb8";
+  img->data = rgb_img.rawData;
+
+  img->header.stamp = this->get_clock()->now();
+  img->header.frame_id = get_optical_frame_id(); //FIXME should this have a different name?
+  vice_camera_stream_pub_->publish(std::move(img));
 }
 
 void
