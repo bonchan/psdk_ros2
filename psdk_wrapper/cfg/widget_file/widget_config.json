@@ -1,0 +1,118 @@
+{
+  "version": {
+    "major": 1,
+    "minor": 0
+  },
+  "main_interface": {
+    "floating_window": {
+      "is_enable": false
+    },
+    "speaker": {
+      "is_enable_tts": false,
+      "is_enable_voice": false
+    },
+    "widget_list": [
+      {
+        "widget_index": 0,
+        "widget_type": "switch",
+        "widget_name": "SwitchA",
+        "icon_file_set": {
+          "icon_file_name_selected": "a_pressed.png",
+          "icon_file_name_unselected": "a.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 0
+        }
+      },
+      {
+        "widget_index": 1,
+        "widget_type": "switch",
+        "widget_name": "SwitchB",
+        "icon_file_set": {
+          "icon_file_name_selected": "b_pressed.png",
+          "icon_file_name_unselected": "b.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 1
+        }
+      },
+      {
+        "widget_index": 2,
+        "widget_type": "switch",
+        "widget_name": "SwitchC",
+        "icon_file_set": {
+          "icon_file_name_selected": "c_pressed.png",
+          "icon_file_name_unselected": "c.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": false,
+          "mapping_config_display_order": 2
+        }
+      },
+      {
+        "widget_index": 3,
+        "widget_type": "switch",
+        "widget_name": "SwitchD",
+        "icon_file_set": {
+          "icon_file_name_selected": "d_pressed.png",
+          "icon_file_name_unselected": "d.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 3
+        }
+      },
+      {
+        "widget_index": 4,
+        "widget_type": "switch",
+        "widget_name": "SwitchPS",
+        "icon_file_set": {
+          "icon_file_name_selected": "stop.png",
+          "icon_file_name_unselected": "play.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 4
+        }
+      },
+      {
+        "widget_index": 5,
+        "widget_type": "switch",
+        "widget_name": "SwitchUp",
+        "icon_file_set": {
+          "icon_file_name_selected": "up_pressed.png",
+          "icon_file_name_unselected": "up.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 5
+        }
+      },
+      {
+        "widget_index": 6,
+        "widget_type": "switch",
+        "widget_name": "SwitchDown",
+        "icon_file_set": {
+          "icon_file_name_selected": "down_pressed.png",
+          "icon_file_name_unselected": "down.png"
+        },
+        "customize_rc_buttons_config": {
+          "is_enable": true,
+          "mapping_config_display_order": 6
+        }
+      }
+    ]
+  },
+  "config_interface": {
+    "text_input_box": {
+      "widget_name": "TextInputBox",
+      "placeholder_text": "Please input message",
+      "is_enable": true
+    },
+    "widget_list": [
+      
+    ]
+  }
+}

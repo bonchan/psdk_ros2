@@ -24,6 +24,8 @@ std::shared_ptr<psdk_ros2::CameraModule> psdk_ros2::global_camera_ptr_;
 std::shared_ptr<psdk_ros2::LiveviewModule> psdk_ros2::global_liveview_ptr_;
 std::shared_ptr<psdk_ros2::HmsModule> psdk_ros2::global_hms_ptr_;
 std::shared_ptr<psdk_ros2::PerceptionModule> psdk_ros2::global_perception_ptr_;
+std::shared_ptr<psdk_ros2::WidgetModule> psdk_ros2::global_widget_ptr_;
+
 
 using namespace std::placeholders;  // NOLINT
 
@@ -44,6 +46,7 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   declare_parameter("developer_account", rclcpp::ParameterValue(""));
   declare_parameter("baudrate", rclcpp::ParameterValue(""));
   declare_parameter("link_config_file_path", rclcpp::ParameterValue(""));
+  declare_parameter("widget_config_file_path", rclcpp::ParameterValue(""));
   declare_parameter("mandatory_modules.telemetry",
                     rclcpp::ParameterValue(true));
   declare_parameter("mandatory_modules.flight_control",
@@ -54,6 +57,7 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   declare_parameter("mandatory_modules.hms", rclcpp::ParameterValue(true));
   declare_parameter("mandatory_modules.perception",
                     rclcpp::ParameterValue(true));
+  declare_parameter("mandatory_modules.widget", rclcpp::ParameterValue(true));
   declare_parameter("tf_frame_prefix", rclcpp::ParameterValue(""));
   declare_parameter("imu_frame", rclcpp::ParameterValue("psdk_imu_link"));
   declare_parameter("body_frame", rclcpp::ParameterValue("psdk_base_link"));
@@ -97,6 +101,7 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   get_parameter("mandatory_modules.hms", is_hms_module_mandatory_);
   get_parameter("mandatory_modules.perception",
                 is_perception_module_mandatory_);
+  get_parameter("mandatory_modules.widget", is_widget_module_mandatory_);
 
   create_module(is_telemetry_module_mandatory_, telemetry_module_,
                 telemetry_thread_, "telemetry_node",
@@ -115,6 +120,9 @@ PSDKWrapper::PSDKWrapper(const std::string &node_name)
   create_module(is_perception_module_mandatory_, perception_module_,
                 perception_thread_, "perception_node",
                 psdk_ros2::global_perception_ptr_);
+  create_module(is_widget_module_mandatory_, widget_module_,
+                widget_thread_, "widget_node",
+                psdk_ros2::global_widget_ptr_);
 }
 
 PSDKWrapper::~PSDKWrapper()
@@ -229,7 +237,9 @@ PSDKWrapper::on_shutdown(const rclcpp_lifecycle::State &state)
        !liveview_module_->deinit()) ||
       (is_hms_module_mandatory_ && hms_module_ && !hms_module_->deinit()) ||
       (is_perception_module_mandatory_ && perception_module_ &&
-       !perception_module_->deinit()))
+       !perception_module_->deinit()) ||
+      (is_widget_module_mandatory_ && widget_module_ &&
+       !widget_module_->deinit()))
   {
     RCLCPP_ERROR(get_logger(), "Failed to deinitialize one or more modules.");
     return CallbackReturn::FAILURE;
@@ -263,6 +273,8 @@ PSDKWrapper::on_shutdown(const rclcpp_lifecycle::State &state)
   stop_and_destroy_module(is_hms_module_mandatory_, hms_module_, hms_thread_);
   stop_and_destroy_module(is_perception_module_mandatory_, perception_module_,
                           perception_thread_);
+  stop_and_destroy_module(is_widget_module_mandatory_, widget_module_,
+                          widget_thread_);
 
   rclcpp::shutdown();
   return CallbackReturn::SUCCESS;
@@ -496,6 +508,8 @@ PSDKWrapper::load_parameters()
                           params_.link_config_file_path);
   RCLCPP_INFO(get_logger(), "Using connection configuration file: %s",
               params_.link_config_file_path.c_str());
+  RCLCPP_INFO(get_logger(), "Using widget configuration file: %s",
+              params_.widget_config_file_path.c_str());
 
   get_parameter("num_of_initialization_retries",
                 num_of_initialization_retries_);
@@ -510,6 +524,11 @@ PSDKWrapper::load_parameters()
   {
     get_non_mandatory_param("hms_return_codes_path",
                             hms_module_->hms_return_codes_path_);
+  }
+  if (is_widget_module_mandatory_)
+  {
+    get_non_mandatory_param("widget_config_file_path",
+                            widget_module_->widget_config_file_path_);
   }
   if (is_camera_module_mandatory_)
   {
@@ -701,7 +720,9 @@ PSDKWrapper::initialize_psdk_modules()
       !initialize_module(is_gimbal_module_mandatory_, gimbal_module_) ||
       !initialize_module(is_liveview_module_mandatory_, liveview_module_) ||
       !initialize_module(is_hms_module_mandatory_, hms_module_) ||
-      !initialize_module(is_perception_module_mandatory_, perception_module_))
+      !initialize_module(is_perception_module_mandatory_, perception_module_) ||
+      !initialize_module(is_widget_module_mandatory_, widget_module_)
+      )
   {
     return false;
   }
@@ -805,6 +826,7 @@ PSDKWrapper::transition_modules_to_state(LifecycleState state)
   transition_if_mandatory(is_gimbal_module_mandatory_, gimbal_module_);
   transition_if_mandatory(is_hms_module_mandatory_, hms_module_);
   transition_if_mandatory(is_perception_module_mandatory_, perception_module_);
+  transition_if_mandatory(is_widget_module_mandatory_, widget_module_);
 
   return all_transitions_successful;
 }

@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
+#include <fstream>
 
 namespace psdk_ros2
 {

@@ -46,6 +46,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SubFileInfo.msg"
   "msg/FileAttributes.msg"
   "msg/PerceptionCameraParameters.msg"
+  "msg/WidgetPress.msg"
   "srv/CameraGetType.srv"
   "srv/CameraSetExposureModeEV.srv"
   "srv/CameraGetExposureModeEV.srv"
