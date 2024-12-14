@@ -508,6 +508,9 @@ PSDKWrapper::load_parameters()
                           params_.link_config_file_path);
   RCLCPP_INFO(get_logger(), "Using connection configuration file: %s",
               params_.link_config_file_path.c_str());
+
+  get_non_mandatory_param("widget_config_file_path",
+                          params_.widget_config_file_path);
   RCLCPP_INFO(get_logger(), "Using widget configuration file: %s",
               params_.widget_config_file_path.c_str());
 
